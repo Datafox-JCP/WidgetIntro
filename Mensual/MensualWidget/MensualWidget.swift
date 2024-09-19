@@ -9,27 +9,30 @@ import WidgetKit
 import SwiftUI
 
 // Cuando se actualiza el widget
+
+// Todos los cambios a Provider se hacen después del UI
 struct Provider: TimelineProvider {
     // Lo que se muestra cuando no hay datos
-    func placeholder(in context: Context) -> SimpleEntry {
-        SimpleEntry(date: Date(), emoji: "😀")
+    func placeholder(in context: Context) -> DayEntry {
+        DayEntry(date: Date())
     }
 
     // Proporciona la última versión del widget (se ve en la galería)
-    func getSnapshot(in context: Context, completion: @escaping (SimpleEntry) -> ()) {
-        let entry = SimpleEntry(date: Date(), emoji: "😀")
+    func getSnapshot(in context: Context, completion: @escaping (DayEntry) -> ()) {
+        let entry = DayEntry(date: Date())
         completion(entry)
     }
 
     // Es donde se  crea el snapshot
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
-        var entries: [SimpleEntry] = []
+        var entries: [DayEntry] = []
 
         // Generate a timeline consisting of five entries an hour apart, starting from the current date.
         let currentDate = Date()
-        for hourOffset in 0 ..< 5 {
-            let entryDate = Calendar.current.date(byAdding: .hour, value: hourOffset, to: currentDate)!
-            let entry = SimpleEntry(date: entryDate, emoji: "😀")
+        for dayOffset in 0 ..< 7 {
+            let entryDate = Calendar.current.date(byAdding: .day, value: dayOffset, to: currentDate)!
+            let startOfDate = Calendar.current.startOfDay(for: entryDate)
+            let entry = DayEntry(date: startOfDate)
             entries.append(entry)
         }
 
@@ -44,23 +47,38 @@ struct Provider: TimelineProvider {
 }
 
 // Estos son los datos (data model)
-struct SimpleEntry: TimelineEntry {
+struct DayEntry: TimelineEntry {
     let date: Date
-    let emoji: String
 }
 
 // Este es el UI
 struct MensualWidgetEntryView : View {
-    var entry: Provider.Entry
+    var entry: DayEntry
 
     var body: some View {
-        VStack {
-            Text("Time:")
-            Text(entry.date, style: .time)
-
-            Text("Emoji:")
-            Text(entry.emoji)
-        }
+        ZStack {
+            ContainerRelativeShape()
+                .fill(.gray.gradient)
+            
+            VStack {
+                HStack(spacing: 4) {
+                    Text("💘")
+                        .font(.title)
+                    
+                    Text(entry.date.weekdayDisplayFormat)
+                        .font(.title3)
+                        .bold()
+                        .minimumScaleFactor(0.6)
+                        .foregroundStyle(.black.opacity(0.6))
+                    
+                    Spacer()
+                } // HStack
+                
+                Text(entry.date.dayDisplayFormat)
+                    .font(.system(size: 80, weight: .heavy))
+                    .foregroundStyle(.white.opacity(0.8))
+            } // VStack
+        } // ZStack
     }
 }
 
@@ -80,13 +98,24 @@ struct MensualWidget: Widget {
             }
         }
         .configurationDisplayName("Meses")
-        .description("App muestra de Widget")
+        .description("El widget cambia su estilo de acuerdo al mes")
+        .supportedFamilies([.systemSmall])
     }
 }
 
 #Preview(as: .systemSmall) {
     MensualWidget()
 } timeline: {
-    SimpleEntry(date: .now, emoji: "😀")
-    SimpleEntry(date: .now, emoji: "🤩")
+    DayEntry(date: .now)
+    DayEntry(date: .now)
+}
+
+extension Date {
+    var weekdayDisplayFormat: String {
+        self.formatted(.dateTime.weekday(.wide))
+    }
+    
+    var dayDisplayFormat: String {
+        self.formatted(.dateTime.day())
+    }
 }
