@@ -8,16 +8,20 @@
 import WidgetKit
 import SwiftUI
 
+// Cuando se actualiza el widget
 struct Provider: TimelineProvider {
+    // Lo que se muestra cuando no hay datos
     func placeholder(in context: Context) -> SimpleEntry {
         SimpleEntry(date: Date(), emoji: "😀")
     }
 
+    // Proporciona la última versión del widget (se ve en la galería)
     func getSnapshot(in context: Context, completion: @escaping (SimpleEntry) -> ()) {
         let entry = SimpleEntry(date: Date(), emoji: "😀")
         completion(entry)
     }
 
+    // Es donde se  crea el snapshot
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
         var entries: [SimpleEntry] = []
 
@@ -29,6 +33,7 @@ struct Provider: TimelineProvider {
             entries.append(entry)
         }
 
+        // policy es cuando se va a actualizar el widget
         let timeline = Timeline(entries: entries, policy: .atEnd)
         completion(timeline)
     }
@@ -38,11 +43,13 @@ struct Provider: TimelineProvider {
 //    }
 }
 
+// Estos son los datos (data model)
 struct SimpleEntry: TimelineEntry {
     let date: Date
     let emoji: String
 }
 
+// Este es el UI
 struct MensualWidgetEntryView : View {
     var entry: Provider.Entry
 
@@ -57,6 +64,7 @@ struct MensualWidgetEntryView : View {
     }
 }
 
+// Widget (como el app)
 struct MensualWidget: Widget {
     let kind: String = "MensualWidget"
 
@@ -71,8 +79,8 @@ struct MensualWidget: Widget {
                     .background()
             }
         }
-        .configurationDisplayName("My Widget")
-        .description("This is an example widget.")
+        .configurationDisplayName("Meses")
+        .description("App muestra de Widget")
     }
 }
 
