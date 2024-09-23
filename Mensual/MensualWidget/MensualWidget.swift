@@ -53,32 +53,44 @@ struct DayEntry: TimelineEntry {
 
 // Este es el UI
 struct MensualWidgetEntryView : View {
+    @Environment(\.showsWidgetContainerBackground) var showBackground // 2
+    
     var entry: DayEntry
+    var config: MonthConfig
+    
+    init(entry: DayEntry) {
+        self.entry = entry
+        self.config = MonthConfig.determineConfig(from: entry.date)
+    }
 
     var body: some View {
-        ZStack {
-            ContainerRelativeShape()
-                .fill(.gray.gradient)
-            
-            VStack {
-                HStack(spacing: 4) {
-                    Text("💘")
-                        .font(.title)
-                    
-                    Text(entry.date.weekdayDisplayFormat)
-                        .font(.title3)
-                        .bold()
-                        .minimumScaleFactor(0.6)
-                        .foregroundStyle(.black.opacity(0.6))
-                    
-                    Spacer()
-                } // HStack
+        VStack {
+            HStack(spacing: 4) {
+                Text(config.emojiText)
+                    .font(.title)
                 
-                Text(entry.date.dayDisplayFormat)
-                    .font(.system(size: 80, weight: .heavy))
-                    .foregroundStyle(.white.opacity(0.8))
-            } // VStack
-        } // ZStack
+                Text(entry.date.weekdayDisplayFormat)
+                    .font(.title3)
+                    .bold()
+                    .minimumScaleFactor(0.6)
+//                    .foregroundStyle(config.weekdayTextColor) 2
+                    .foregroundStyle(showBackground ?  config.weekdayTextColor : .white)
+                
+                Spacer()
+            } // HStack
+            .id(entry.date)
+            .transition(.push(from: .trailing))
+            .animation(.bouncy, value: entry.date)
+            
+            Text(entry.date.dayDisplayFormat)
+                .font(.system(size: 80, weight: .heavy))
+                .foregroundStyle(showBackground ? config.dayTextColor : .white)
+                .contentTransition(.numericText())
+        } // VStack
+        .containerBackground(for: .widget) {
+            ContainerRelativeShape()
+                .fill(config.backgroundColor.gradient)
+        }
     }
 }
 
@@ -90,7 +102,7 @@ struct MensualWidget: Widget {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
             if #available(iOS 17.0, *) {
                 MensualWidgetEntryView(entry: entry)
-                    .containerBackground(.fill.tertiary, for: .widget)
+//                    .containerBackground(.fill.tertiary, for: .widget)
             } else {
                 MensualWidgetEntryView(entry: entry)
                     .padding()
@@ -100,14 +112,19 @@ struct MensualWidget: Widget {
         .configurationDisplayName("Meses")
         .description("El widget cambia su estilo de acuerdo al mes")
         .supportedFamilies([.systemSmall])
+        .disfavoredLocations([.lockScreen], for: [.systemSmall]) // 3
     }
 }
 
 #Preview(as: .systemSmall) {
     MensualWidget()
 } timeline: {
-    DayEntry(date: .now)
-    DayEntry(date: .now)
+//    DayEntry(date: .now)
+//    DayEntry(date: .now)
+    MockData.dayOne
+    MockData.dayTwo
+    MockData.dayThree
+    MockData.dayFour
 }
 
 extension Date {
@@ -117,5 +134,22 @@ extension Date {
     
     var dayDisplayFormat: String {
         self.formatted(.dateTime.day())
+    }
+}
+
+struct MockData {
+    static let dayOne = DayEntry(date: dateToDisplay(month: 02, day: 4))
+    static let dayTwo = DayEntry(date: dateToDisplay(month: 02, day: 5))
+    static let dayThree = DayEntry(date: dateToDisplay(month: 02, day: 6))
+    static let dayFour = DayEntry(date: dateToDisplay(month: 02, day: 7))
+    
+    static func dateToDisplay(month: Int, day: Int) -> Date {
+        let components = DateComponents(calendar: Calendar.current,
+                                        year: 2024,
+                                        month: month,
+                                        day: day
+        )
+        
+        return Calendar.current.date(from: components)!
     }
 }
