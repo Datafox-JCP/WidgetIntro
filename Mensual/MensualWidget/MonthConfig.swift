@@ -59,19 +59,19 @@ struct MonthConfig {
                                dayTextColor: .darkOrange.opacity(0.8))
         case 9:
             return MonthConfig(backgroundColor: .paleRed,
-                               emojiText: "🍁",
-                               weekdayTextColor: .black.opacity(0.5),
-                               dayTextColor: .paleYellow.opacity(0.9))
+                               emojiText: "🇲🇽",
+                               weekdayTextColor: .white.opacity(0.5),
+                               dayTextColor: .darkGreen.opacity(0.9))
         case 10:
             return MonthConfig(backgroundColor: .black,
-                               emojiText: "👻",
-                               weekdayTextColor: .white.opacity(0.6),
-                               dayTextColor: .orange.opacity(0.8))
+                               emojiText: "🎇",
+                               weekdayTextColor: .black.opacity(0.6),
+                               dayTextColor: .black.opacity(0.8))
         case 11:
             return MonthConfig(backgroundColor: .paleBrown,
-                               emojiText: "🦃",
-                               weekdayTextColor: .black.opacity(0.6),
-                               dayTextColor: .black.opacity(0.6))
+                               emojiText: "💀",
+                               weekdayTextColor: .white.opacity(0.6),
+                               dayTextColor: .orange.opacity(0.6))
         case 12:
             return MonthConfig(backgroundColor: .paleRed,
                                emojiText: "🎄",

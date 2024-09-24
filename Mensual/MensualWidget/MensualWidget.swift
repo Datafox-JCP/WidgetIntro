@@ -7,26 +7,21 @@
 
 import WidgetKit
 import SwiftUI
-
 // Cuando se actualiza el widget
-
 // Todos los cambios a Provider se hacen después del UI
 struct Provider: TimelineProvider {
     // Lo que se muestra cuando no hay datos
     func placeholder(in context: Context) -> DayEntry {
         DayEntry(date: Date())
     }
-
     // Proporciona la última versión del widget (se ve en la galería)
     func getSnapshot(in context: Context, completion: @escaping (DayEntry) -> ()) {
         let entry = DayEntry(date: Date())
         completion(entry)
     }
-
     // Es donde se  crea el snapshot
     func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
         var entries: [DayEntry] = []
-
         // Generate a timeline consisting of five entries an hour apart, starting from the current date.
         let currentDate = Date()
         for dayOffset in 0 ..< 7 {
@@ -35,15 +30,10 @@ struct Provider: TimelineProvider {
             let entry = DayEntry(date: startOfDate)
             entries.append(entry)
         }
-
         // policy es cuando se va a actualizar el widget
         let timeline = Timeline(entries: entries, policy: .atEnd)
         completion(timeline)
     }
-
-//    func relevances() async -> WidgetRelevances<Void> {
-//        // Generate a list containing the contexts this widget is relevant in.
-//    }
 }
 
 // Estos son los datos (data model)
@@ -62,7 +52,6 @@ struct MensualWidgetEntryView : View {
         self.entry = entry
         self.config = MonthConfig.determineConfig(from: entry.date)
     }
-
     var body: some View {
         VStack {
             HStack(spacing: 4) {
@@ -97,7 +86,6 @@ struct MensualWidgetEntryView : View {
 // Widget (como el app)
 struct MensualWidget: Widget {
     let kind: String = "MensualWidget"
-
     var body: some WidgetConfiguration {
         StaticConfiguration(kind: kind, provider: Provider()) { entry in
             if #available(iOS 17.0, *) {
@@ -138,10 +126,10 @@ extension Date {
 }
 
 struct MockData {
-    static let dayOne = DayEntry(date: dateToDisplay(month: 02, day: 4))
-    static let dayTwo = DayEntry(date: dateToDisplay(month: 02, day: 5))
-    static let dayThree = DayEntry(date: dateToDisplay(month: 02, day: 6))
-    static let dayFour = DayEntry(date: dateToDisplay(month: 02, day: 7))
+    static let dayOne = DayEntry(date: dateToDisplay(month: 01, day: 1))
+    static let dayTwo = DayEntry(date: dateToDisplay(month: 02, day: 12))
+    static let dayThree = DayEntry(date: dateToDisplay(month: 09, day: 15))
+    static let dayFour = DayEntry(date: dateToDisplay(month: 11, day: 2))
     
     static func dateToDisplay(month: Int, day: Int) -> Date {
         let components = DateComponents(calendar: Calendar.current,
