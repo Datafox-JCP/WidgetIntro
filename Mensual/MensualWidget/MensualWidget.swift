@@ -7,38 +7,42 @@
 
 import WidgetKit
 import SwiftUI
+import AppIntents
+
 // Cuando se actualiza el widget
 // Todos los cambios a Provider se hacen después del UI
-struct Provider: TimelineProvider {
+struct Provider: AppIntentTimelineProvider {
     // Lo que se muestra cuando no hay datos
     func placeholder(in context: Context) -> DayEntry {
-        DayEntry(date: Date())
+        DayEntry(date: Date(), showFunFont: false)
     }
+    
     // Proporciona la última versión del widget (se ve en la galería)
-    func getSnapshot(in context: Context, completion: @escaping (DayEntry) -> ()) {
-        let entry = DayEntry(date: Date())
-        completion(entry)
+    func snapshot(for configuration: ChangeFontIntent, in context: Context) async -> DayEntry {
+        return DayEntry(date: Date(), showFunFont: false)
     }
+    
     // Es donde se  crea el snapshot
-    func getTimeline(in context: Context, completion: @escaping (Timeline<Entry>) -> ()) {
+    func timeline(for configuration: ChangeFontIntent, in context: Context) async -> Timeline<DayEntry> {
         var entries: [DayEntry] = []
-        // Generate a timeline consisting of five entries an hour apart, starting from the current date.
+        
+        let showFunFont = configuration.funFont
         let currentDate = Date()
         for dayOffset in 0 ..< 7 {
             let entryDate = Calendar.current.date(byAdding: .day, value: dayOffset, to: currentDate)!
             let startOfDate = Calendar.current.startOfDay(for: entryDate)
-            let entry = DayEntry(date: startOfDate)
+            let entry = DayEntry(date: startOfDate, showFunFont: showFunFont!)
             entries.append(entry)
         }
         // policy es cuando se va a actualizar el widget
-        let timeline = Timeline(entries: entries, policy: .atEnd)
-        completion(timeline)
+        return Timeline(entries: entries, policy: .atEnd)
     }
 }
 
 // Estos son los datos (data model)
 struct DayEntry: TimelineEntry {
     let date: Date
+    let showFunFont: Bool
 }
 
 // Este es el UI
@@ -47,6 +51,8 @@ struct MensualWidgetEntryView : View {
     
     var entry: DayEntry
     var config: MonthConfig
+    
+    let funFontName = "Chalkduster"
     
     init(entry: DayEntry) {
         self.entry = entry
@@ -59,10 +65,9 @@ struct MensualWidgetEntryView : View {
                     .font(.title)
                 
                 Text(entry.date.weekdayDisplayFormat)
-                    .font(.title3)
+                    .font(entry.showFunFont ? .custom(funFontName, size: 24) : .title3)
                     .bold()
                     .minimumScaleFactor(0.6)
-//                    .foregroundStyle(config.weekdayTextColor) 2
                     .foregroundStyle(showBackground ?  config.weekdayTextColor : .white)
                 
                 Spacer()
@@ -72,7 +77,7 @@ struct MensualWidgetEntryView : View {
             .animation(.bouncy, value: entry.date)
             
             Text(entry.date.dayDisplayFormat)
-                .font(.system(size: 80, weight: .heavy))
+                .font(entry.showFunFont ? .custom(funFontName, size: 80) : .system(size: 80, weight: .heavy))
                 .foregroundStyle(showBackground ? config.dayTextColor : .white)
                 .contentTransition(.numericText())
         } // VStack
@@ -87,32 +92,31 @@ struct MensualWidgetEntryView : View {
 struct MensualWidget: Widget {
     let kind: String = "MensualWidget"
     var body: some WidgetConfiguration {
-        StaticConfiguration(kind: kind, provider: Provider()) { entry in
-            if #available(iOS 17.0, *) {
-                MensualWidgetEntryView(entry: entry)
-//                    .containerBackground(.fill.tertiary, for: .widget)
-            } else {
-                MensualWidgetEntryView(entry: entry)
-                    .padding()
-                    .background()
-            }
+        AppIntentConfiguration(kind: kind, intent: ChangeFontIntent.self, provider: Provider()) { entry in
+            MensualWidgetEntryView(entry: entry)
         }
         .configurationDisplayName("Meses")
         .description("El widget cambia su estilo de acuerdo al mes")
         .supportedFamilies([.systemSmall])
-        .disfavoredLocations([.lockScreen], for: [.systemSmall]) // 3
+        .disfavoredLocations([.lockScreen], for: [.systemSmall])
     }
 }
 
 #Preview(as: .systemSmall) {
     MensualWidget()
 } timeline: {
-//    DayEntry(date: .now)
-//    DayEntry(date: .now)
     MockData.dayOne
     MockData.dayTwo
     MockData.dayThree
     MockData.dayFour
+}
+
+struct ChangeFontIntent: AppIntent, WidgetConfigurationIntent {
+    static var title: LocalizedStringResource = "Fuente Graciosa"
+    static var description: IntentDescription = .init(stringLiteral: "Cambia el tipo de fuente del widget")
+    
+    @Parameter(title: "Fuente Graciosa")
+    var funFont: Bool?
 }
 
 extension Date {
@@ -126,10 +130,10 @@ extension Date {
 }
 
 struct MockData {
-    static let dayOne = DayEntry(date: dateToDisplay(month: 01, day: 1))
-    static let dayTwo = DayEntry(date: dateToDisplay(month: 02, day: 12))
-    static let dayThree = DayEntry(date: dateToDisplay(month: 09, day: 15))
-    static let dayFour = DayEntry(date: dateToDisplay(month: 11, day: 2))
+    static let dayOne = DayEntry(date: dateToDisplay(month: 01, day: 12), showFunFont: false)
+    static let dayTwo = DayEntry(date: dateToDisplay(month: 02, day: 14), showFunFont: false)
+    static let dayThree = DayEntry(date: dateToDisplay(month: 09, day: 15), showFunFont: false)
+    static let dayFour = DayEntry(date: dateToDisplay(month: 11, day: 1), showFunFont: false)
     
     static func dateToDisplay(month: Int, day: Int) -> Date {
         let components = DateComponents(calendar: Calendar.current,
